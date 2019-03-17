@@ -1,0 +1,19 @@
+{
+    "type": "package",
+    "name": "getto-systems/elm-url",
+    "summary": "url utilities",
+    "license": "MIT",
+    "version": "1.0.0",
+    "exposed-modules": [
+        "Getto.Url.Query.Encode",
+        "Getto.Url.Query.Decode",
+        "Getto.Url.Query.SafeDecode"
+    ],
+    "elm-version": "0.19.0 <= v < 0.20.0",
+    "dependencies": {
+        "elm/core": "1.0.2 <= v < 2.0.0"
+    },
+    "test-dependencies": {
+        "elm-explorations/test": "1.2.1 <= v < 2.0.0"
+    }
+}

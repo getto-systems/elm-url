@@ -1,9 +1,14 @@
 module Getto.Url.Query.SafeDecodeTest exposing (..)
 import Getto.Url.Query.SafeDecode as QuerySafeDecode
 
+import Url
+
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
+
+param ( name, value ) = (name |> Url.percentEncode) ++ "=" ++ (value |> Url.percentEncode)
+bool = Url.percentEncode
 
 suite : Test
 suite =
@@ -11,14 +16,14 @@ suite =
     [ describe "decode"
       [ test "should decode query" <|
         \_ ->
-          [ "q%5B%255B%255D%5D=John"
-          , "q%5Bage%5D=30"
-          , "q%5Ben%5D"
-          , "q%5Broles%5D%5B%5D=admin"
-          , "q%5Broles%5D%5B%5D=system"
-          , "q%5Bnums%5D%5B%5D=1"
-          , "q%5Bnums%5D%5B%5D=value"
-          , "s=name.desc"
+          [ ( "q[%5B%5D]", "John" )    |> param
+          , ( "q[age]", "30" )         |> param
+          , ( "q[en]" )                |> bool
+          , ( "q[roles][]", "admin" )  |> param
+          , ( "q[roles][]", "system" ) |> param
+          , ( "q[nums][]", "1" )       |> param
+          , ( "q[nums][]", "value" )   |> param
+          , ( "sort", "name.desc" )    |> param
           ]
           |>
             (\query ->
@@ -33,7 +38,7 @@ suite =
                 , numbers  = query |> QuerySafeDecode.listAt  ["q","nums"]  (QuerySafeDecode.int 0)
                 , empty    = query |> QuerySafeDecode.listAt  ["q","empty"] (QuerySafeDecode.string "")
                 }
-              , sort = query |> QuerySafeDecode.entryAt ["s"] (QuerySafeDecode.string "")
+              , sort = query |> QuerySafeDecode.entryAt ["sort"] (QuerySafeDecode.string "")
               }
             )
           |> Expect.equal
@@ -95,7 +100,7 @@ suite =
 
       , test "should decode special chars" <|
         \_ ->
-          ["%253F%255B%2520%255D%253D%2526=%5B%20%5D%3D%26%3F"]
+          [ ( "?[ ]=&" |> Url.percentEncode, "[ ]=&?" ) |> param ]
           |> (QuerySafeDecode.entryAt ["?[ ]=&"] (QuerySafeDecode.string ""))
           |> Expect.equal "[ ]=&?"
 

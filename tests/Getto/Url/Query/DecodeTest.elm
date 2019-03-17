@@ -1,9 +1,14 @@
 module Getto.Url.Query.DecodeTest exposing (..)
 import Getto.Url.Query.Decode as QueryDecode
 
+import Url
+
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
+
+param ( name, value ) = (name |> Url.percentEncode) ++ "=" ++ (value |> Url.percentEncode)
+bool = Url.percentEncode
 
 suite : Test
 suite =
@@ -11,16 +16,16 @@ suite =
     [ describe "decode"
       [ test "should decode query" <|
         \_ ->
-          [ "q%5B%255B%255D%5D=John"
-          , "q%5Bage%5D=30"
-          , "q%5Ben%5D"
-          , "q%5Broles%5D%5B%5D=admin"
-          , "q%5Broles%5D%5B%5D=system"
-          , "q%5Bnums%5D%5B%5D=1"
-          , "q%5Bnums%5D%5B%5D=2"
-          , "q%5Bfails%5D%5B%5D=1"
-          , "q%5Bfails%5D%5B%5D=value"
-          , "s=name.desc"
+          [ ( "q[%5B%5D]", "John" )    |> param
+          , ( "q[age]", "30" )         |> param
+          , ( "q[en]" )                |> bool
+          , ( "q[roles][]", "admin" )  |> param
+          , ( "q[roles][]", "system" ) |> param
+          , ( "q[nums][]", "1" )       |> param
+          , ( "q[nums][]", "2" )       |> param
+          , ( "q[fails][]", "1" )      |> param
+          , ( "q[fails][]", "value" )  |> param
+          , ( "sort", "name.desc" )    |> param
           ]
           |>
             (\query ->
@@ -36,7 +41,7 @@ suite =
                 , fails    = query |> QueryDecode.listAt  ["q","fails"] QueryDecode.int
                 , empty    = query |> QueryDecode.listAt  ["q","empty"] QueryDecode.string
                 }
-              , sort = query |> QueryDecode.entryAt ["s"] QueryDecode.string
+              , sort = query |> QueryDecode.entryAt ["sort"] QueryDecode.string
               }
             )
           |> Expect.equal
@@ -87,7 +92,7 @@ suite =
 
       , test "should decode special chars" <|
         \_ ->
-          ["%253F%255B%2520%255D%253D%2526=%5B%20%5D%3D%26%3F"]
+          [ ( "?[ ]=&" |> Url.percentEncode, "[ ]=&?" ) |> param ]
           |> (QueryDecode.entryAt ["?[ ]=&"] QueryDecode.string)
           |> Expect.equal (Just "[ ]=&?")
 
